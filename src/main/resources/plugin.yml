@@ -1,0 +1,4 @@
+name: Pvp
+version: ${project.version}
+main: pvp.pvp.Pvp
+api-version: 1.17

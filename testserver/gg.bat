@@ -1,0 +1,1 @@
+java -Xms1G -Xmx1G -jar paper-1.17.1-99.jar
