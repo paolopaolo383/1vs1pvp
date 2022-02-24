@@ -4,6 +4,10 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.block.Banner;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.banner.Pattern;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -23,8 +27,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.inventory.meta.*;
+import org.bukkit.map.MapView;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -58,8 +62,11 @@ public final class Pvp extends JavaPlugin implements Listener {
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("pvp권");
         item.setItemMeta(meta);
-        ShapelessRecipe newrecipe = new ShapelessRecipe(new NamespacedKey(this, "pvp_ticket"),item).addIngredient(1,Material.DIAMOND_BLOCK).addIngredient(1,Material.GOLD_BLOCK).addIngredient(1,Material.EXPERIENCE_BOTTLE).addIngredient(1,Material.ELYTRA).addIngredient(1,Material.NETHERITE_INGOT);
+        ShapelessRecipe newrecipe = new ShapelessRecipe(new NamespacedKey(this, "pvp_ticket"),item).addIngredient(1,Material.DIAMOND_BLOCK).addIngredient(1,Material.GOLD_BLOCK).addIngredient(1,Material.EXPERIENCE_BOTTLE).addIngredient(1,Material.ELYTRA).addIngredient(1,Material.NETHERITE_BLOCK);
         getServer().addRecipe(newrecipe);
+
+
+
 
     }
 
