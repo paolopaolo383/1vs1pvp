@@ -3,41 +3,32 @@ package pvp.pvp;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.block.Banner;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.banner.Pattern;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.*;
-import org.bukkit.map.MapView;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.awt.*;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
-
 public final class Pvp extends JavaPlugin implements Listener {
 
 
@@ -51,7 +42,7 @@ public final class Pvp extends JavaPlugin implements Listener {
     String p2 = null;
     float redsec = 0.0f;
     boolean isready = false;
-    HashMap<UUID, Boolean> cooltime = new HashMap<UUID, Boolean>();
+    HashMap<UUID, Boolean> cooltime = new HashMap<>();
     ConsoleCommandSender consol = Bukkit.getConsoleSender();
 
     @Override
@@ -60,6 +51,7 @@ public final class Pvp extends JavaPlugin implements Listener {
         consol.sendMessage(ChatColor.AQUA + "[pvp2] 플러그인 활성화.");
         ItemStack item = new ItemStack(Material.LIGHT_BLUE_DYE,1);
         ItemMeta meta = item.getItemMeta();
+        assert meta != null;
         meta.setDisplayName("pvp권");
         item.setItemMeta(meta);
         ShapelessRecipe newrecipe = new ShapelessRecipe(new NamespacedKey(this, "pvp_ticket"),item).addIngredient(1,Material.DIAMOND_BLOCK).addIngredient(1,Material.GOLD_BLOCK).addIngredient(1,Material.EXPERIENCE_BOTTLE).addIngredient(1,Material.ELYTRA).addIngredient(1,Material.NETHERITE_BLOCK);
@@ -79,7 +71,7 @@ public final class Pvp extends JavaPlugin implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         if (!cooltime.containsKey(e.getPlayer().getUniqueId())) {
             cooltime.put(e.getPlayer().getUniqueId(), true);
-            e.getPlayer().undiscoverRecipe(new NamespacedKey(this, "pvp_ticket"));
+            e.getPlayer().discoverRecipe(new NamespacedKey(this, "pvp_ticket"));
         }
 
 
@@ -95,14 +87,12 @@ public final class Pvp extends JavaPlugin implements Listener {
     @EventHandler
     public void onhand(PlayerItemHeldEvent e) {
 
-
-
-
         new BukkitRunnable() {
             @Override
             public void run() {
                 if (e.getPlayer().getInventory().getItemInMainHand()!=null&&e.getPlayer().getInventory().getItemInMainHand().getType() == Material.LIGHT_BLUE_DYE&&e.getPlayer().getWorld().getName()!="fight") {
                     Player p = e.getPlayer();
+                    assert p.getInventory().getItemInMainHand().getItemMeta() !=null;
                     if (p.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equalsIgnoreCase("pvp권")) {
                         p.spigot().sendMessage(ChatMessageType.ACTION_BAR,new TextComponent("pvp권 사용 가능"));
                     }
@@ -188,7 +178,18 @@ public final class Pvp extends JavaPlugin implements Listener {
         initializeItems();
         ent.openInventory(inv);
     }
-
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent e)
+    {
+        if(e.getInventory().equals(inv))
+        {
+            ItemStack item = new ItemStack(Material.LIGHT_BLUE_DYE,1);
+            ItemMeta meta = item.getItemMeta();
+            meta.setDisplayName("pvp권");
+            item.setItemMeta(meta);
+            e.getPlayer().getInventory().addItem(item);
+        }
+    }
 
     @EventHandler
     public void onInventoryClick(final InventoryClickEvent e) {
@@ -225,13 +226,15 @@ public final class Pvp extends JavaPlugin implements Listener {
                 p.getInventory().addItem(item);
                 p.closeInventory();
                 return;
-            } else if (!cooltime.get(getServer().getPlayer(name).getUniqueId())) {
+            }
+            else if (!cooltime.get(getServer().getPlayer(name).getUniqueId())) {
                 p.sendMessage(name + "님이 쿨타임이 남았습니다.");
 
                 p.getInventory().addItem(item);
                 p.closeInventory();
                 return;
             }
+            p.getInventory().remove(item);
             //갑옷 귀속저주
             /*
             if(getServer().getPlayer(name).getInventory().getHelmet()!=null)
@@ -300,7 +303,14 @@ public final class Pvp extends JavaPlugin implements Listener {
                             bossBar2.setProgress((float) redsec / 300);
 
                             if (redsec == 0) {//여기부터 나가면 즉사
+                                World world = getServer().getWorld("fight");
+                                world.setDifficulty(Difficulty.PEACEFUL);
+                                world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+                                world.setGameRule(GameRule.DO_MOB_SPAWNING, false);
 
+
+                                world.getWorldBorder().setCenter(25, 25);
+                                world.getWorldBorder().setSize(55);
                                 bossBar.removePlayer(getServer().getPlayer(p.getName()));
 
                                 bossBar2.removePlayer(getServer().getPlayer(name));
@@ -308,8 +318,7 @@ public final class Pvp extends JavaPlugin implements Listener {
                                 bossBar2.setVisible(false);
 
                                 //fight
-                                getServer().getPlayer(p1).getEnderChest().clear();
-                                getServer().getPlayer(p2).getEnderChest().clear();
+
                                 l1 = getServer().getPlayer(p1).getLocation();
                                 l2 = getServer().getPlayer(p2).getLocation();
                                 getServer().getWorld("fight").getHighestBlockAt(0,0).setType(Material.STONE);
@@ -367,8 +376,10 @@ public final class Pvp extends JavaPlugin implements Listener {
             isready = true;
 
             consol.sendMessage(p2 + "님이 승리하였습니다.");
+            getServer().getPlayer(p1).getEnderChest().clear();
             cooltime.put(getServer().getPlayer(p1).getUniqueId(), false);
             cooltime.put(getServer().getPlayer(p2).getUniqueId(), false);
+            getServer().getPlayer(p2).sendMessage(ChatColor.AQUA+"승리하셨습니다.");
             getServer().getPlayer(p2).sendMessage(ChatColor.YELLOW + "5분 뒤 자동으로 마지막 장소로 이동합니다.");
             redsec = 300;
             BossBar bossBar = Bukkit.createBossBar("템 정리시간", BarColor.BLUE, BarStyle.SOLID);
@@ -437,8 +448,10 @@ public final class Pvp extends JavaPlugin implements Listener {
             l2 = temp2;
             isready = true;
             consol.sendMessage(p2 + "님이 승리하였습니다.");
+            getServer().getPlayer(p1).getEnderChest().clear();
             cooltime.put(getServer().getPlayer(p1).getUniqueId(), false);
             cooltime.put(getServer().getPlayer(p2).getUniqueId(), false);
+            getServer().getPlayer(p2).sendMessage(ChatColor.AQUA + "승리하셨습니다.");
             getServer().getPlayer(p2).sendMessage(ChatColor.YELLOW + "5분 뒤 자동으로 마지막 장소로 이동합니다.");
             redsec = 300;
             BossBar bossBar = Bukkit.createBossBar("템 정리시간", BarColor.BLUE, BarStyle.SOLID);
@@ -507,13 +520,10 @@ public final class Pvp extends JavaPlugin implements Listener {
         WorldCreator seed = new WorldCreator("fight");
         seed.environment(World.Environment.NORMAL);
         world = seed.createWorld();
-        world.setDifficulty(Difficulty.PEACEFUL);
-        world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-        world.setGameRule(GameRule.DO_MOB_SPAWNING, false);
 
 
-        world.getWorldBorder().setCenter(25, 25);
-        world.getWorldBorder().setSize(55);
+
+
     }
 
 
