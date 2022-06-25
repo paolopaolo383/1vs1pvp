@@ -1,6 +1,6 @@
 # User-specific stuff
 .idea/
-
+testserver/
 *.iml
 *.ipr
 *.iws
